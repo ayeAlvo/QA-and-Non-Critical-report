@@ -157,6 +157,31 @@ _Use OpenZeppelin's `ECDSA` contract rather than calling `ecrecover()` directly_
 
 <br>
 <hr>
+
+## 10. Don't use of `Block.Timestamp` can be manipulated
+
+[Docs](https://solidity-by-example.org/hacks/block-timestamp-manipulation/)
+_Block timestamps have historically been used for a variety of applications, such as entropy for random numbers (see the Entropy Illusion for further details), locking funds for periods of time, and various state-changing conditional statements that are time-dependent. Miners have the ability to adjust timestamps slightly, which can prove to be dangerous if block timestamps are used incorrectly in smart contracts._
+
+Example:
+
+```java
+src/Swap/BaseV1-core.sol:96:        observations.push(Observation(block.timestamp, 0, 0,0));
+src/Swap/BaseV1-core.sol:138:       uint blockTimestamp = block.timestamp;
+src/Swap/BaseV1-core.sol:159:       blockTimestamp = block.timestamp;
+src/Swap/BaseV1-core.sol:176:       if (block.timestamp == _observation.timestamp) {
+src/Swap/BaseV1-core.sol:180:       uint timeElapsed = block.timestamp - _observation.timestamp;
+src/Swap/BaseV1-core.sol:471:       require(deadline >= block.timestamp, "BaseV1: EXPIRED");
+src/Swap/BaseV1-periphery.sol:71:   require(deadline >= block.timestamp, "BaseV1Router: EXPIRED");
+```
+
+Recommended Mitigation Steps:
+
+-   Block timestamps should not be used for entropy or generating random numbers—i.e., they should not be the deciding factor (either directly or through some derivation) for winning a game or changing an important state.
+-   Time-sensitive logic is sometimes required; e.g., for unlocking contracts (time-locking), completing an ICO after a few weeks, or enforcing expiry dates. It is sometimes recommended to use block.number and an average block time to estimate times; with a 10 second block time, 1 week equates to approximately, 60480 blocks. Thus, specifying a block number at which to change a contract state can be more secure, as miners are unable to easily manipulate the block number.
+
+<br>
+<hr>
 <br>
 
 # Low Risk
@@ -165,15 +190,27 @@ _Use OpenZeppelin's `ECDSA` contract rather than calling `ecrecover()` directly_
 
 _The use of `payable.transfer()` is [heavily frowned upon](https://consensys.net/diligence/blog/2019/09/stop-using-soliditys-transfer-now/) because it can lead to the locking of funds. The `transfer()` call requires that the recipient is either an EOA account, or is a contract that has a `payable` callback. For the contract case, the `transfer()` call only provides 2300 gas for the contract to complete its operations. This means the following cases can cause the transfer to fail:_
 
--   The contract does not have a `payable` callback
--   The contract’s `payable` callback spends more than 2300 gas (which is only enough to emit something)
--   The contract is called through a proxy which itself uses up the 2300 gas Use OpenZeppelin’s `Address.sendValue()` instead
+-   The contract does not have a `payable` callback.
+-   The contract’s `payable` callback spends more than 2300 gas (which is only enough to emit something).
+-   The contract is called through a proxy which itself uses up the 2300 gas Use OpenZeppelin’s `Address.sendValue()` instead.
+-   Future changes or forks in Ethereum result in higher gas fees than transfer provides. The .transfer() creates a hard dependency on 2300 gas units being appropriate now and into the future.
 
-Example:
+Example wrong:
 
 ```java
 payable(payAddress).transfer(payAmt);
 ```
+
+Instead use the `.call()` function to transfer ether and avoid some of the limitations of .`transfer()`;
+
+Example:
+
+```java
+(bool success, ) = payable(payAddress).call{value: payAmt}(""); // royalty transfer to royaltyaddress
+require(success, "Transfer failed.");
+```
+
+Note: Gas units can also be passed to the `.call()` function as a variable to accomodate any uses edge cases. Gas could be a mutable state variable that can be set by the contract owner.
 
 <br>
 <hr>
@@ -289,6 +326,77 @@ _Not all `IERC20` implementations `revert()` when there's a failure in `approve(
 File: contracts/rubiconPools/BathToken.sol   #1
 
 214:   IERC20(address(token)).approve(RubiconMarketAddress, 2**256 - 1);
+```
+
+Recommended Mitigation Steps:
+
+-   It is recommend to use `safeApprove()`.
+-   Consider using `safeIncreaseAllowance` instead of approve function. (Approve race condition)
+
+<br>
+<hr>
+
+## 8. Typos
+
+Example:
+
+```java
+/// @audit usefull
+60:           uint256 nonce; // nonce of order usefull for cancelling in bulk
+```
+
+<br>
+<hr>
+
+## 9. NatSpec is incomplete
+
+```java
+File: contracts/core/GolomTrader.sol
+
+/// @audit Missing: '@return'
+162       ///      OrderStatus = 3 , valid order
+163       /// @param o the Order struct to be validated
+164       function validateOrder(Order calldata o)
+165           public
+166           view
+167           returns (
+168               uint256,
+169               bytes32,
+170:              uint256
+
+/// @audit Missing: '@param tokenId'
+/// @audit Missing: '@param proof'
+328       /// @dev function to fill a signed order of ordertype 2 also has a payment param in case the taker wants
+329       ///      to send ether to that address on filling the order, Match an criteria order, ensuring that the supplied proof demonstrates inclusion of the tokenId in the associated merkle root, if root is 0 then any token can be used to fill the order
+330       /// @param o the Order struct to be filled must be orderType 2
+331       /// @param amount the amount of times the order is to be filled(useful for ERC1155)
+332       /// @param referrer referrer of the order
+333       /// @param p any extra payment that the taker of this order wanna send on succesful execution of order
+334       function fillCriteriaBid(
+335           Order calldata o,
+336           uint256 amount,
+337           uint256 tokenId,
+338           bytes32[] calldata proof,
+339           address referrer,
+340           Payment calldata p
+341:      ) public nonReentrant {
+```
+
+<br>
+<hr>
+
+## 10. Inconsistent spacing in comments
+
+_Some lines use `// x` and some use `//x`. The instances below point out the usages that don’t follow the majority, within each file_
+
+Example:
+
+```java
+File: contracts/core/GolomTrader.sol
+181:          //deadline
+
+File: contracts/rewards/RewardDistributor.sol
+99:           //console.log(block.timestamp,epoch,fee);
 ```
 
 <br>
