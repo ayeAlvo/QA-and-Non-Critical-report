@@ -90,6 +90,15 @@ Example:
 ```
 
 <br>
+
+## 4.2 Or use `_` to make long numeric literals easier to read
+
+```java
+uint256 x = 1000000000000; // A trillion
+uint256 y = 1_000_000_000_000; // Also a trillion but a tad more readable
+```
+
+<br>
 <hr>
 
 ## 5. Variable names that consist of all capital letters should be reserved for `constant`/`immutable` variables.
