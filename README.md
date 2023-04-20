@@ -6,6 +6,8 @@
 
 _Index event fields make the field more quickly accessible to off-chain tools that parse events. However, note that each index field costs extra gas during emission, so it’s not necessarily best to index the maximum allowed per event (threefields). Each event should use three indexed fields if there are three or more fields, and gas usage is not particularly of concern for the events in question. `If there are fewer than three fields, all of the fields should be indexed`._
 
+_Each `event` should use three `indexed` fields if there are three or more fields_
+
 Note: Using the `indexed` keyword for value types such as `uint`, `bool`, and `address` saves gas costs, as seen in the example below. However, this is only the case for value types, whereas indexing `bytes` and `strings` are more expensive than their unindexed version.
 
 Before:
@@ -73,6 +75,18 @@ Example:
 ```java
 48:       uint256 constant dailyEmission = 600000 * 10**18;
 100:          if (rewardToken.totalSupply() > 1000000000 * 10**18) {...}
+```
+
+<br>
+
+## 4.1 Large multiples of ten should use scientific notation (e.g. `1e6`) rather than decimal literals (e.g. `1000000`), for readability
+
+Example:
+
+```java
+48:       uint256 constant dailyEmission = 600000 * 10**18;
+100:          if (rewardToken.totalSupply() > 1000000000 * 10**18) {...}
+308:      mapping(uint256 => Point[1000000000]) public user_point_history; // user -> Point[user_epoch]
 ```
 
 <br>
@@ -179,6 +193,26 @@ Recommended Mitigation Steps:
 
 -   Block timestamps should not be used for entropy or generating random numbers—i.e., they should not be the deciding factor (either directly or through some derivation) for winning a game or changing an important state.
 -   Time-sensitive logic is sometimes required; e.g., for unlocking contracts (time-locking), completing an ICO after a few weeks, or enforcing expiry dates. It is sometimes recommended to use block.number and an average block time to estimate times; with a 10 second block time, 1 week equates to approximately, 60480 blocks. Thus, specifying a block number at which to change a contract state can be more secure, as miners are unable to easily manipulate the block number.
+
+<br>
+<hr>
+
+## 11. Inconsistent method of specifying a floating pragma
+
+_Some files use `>=`, some use `^`. The instances below are examples of the method that has the fewest instances for a specific version. Note that using `>=` without also specifying `<=` will lead to failures to compile, or external project incompatability, when the major version changes and there are breaking-changes, so `^` should be preferred regardless of the instance counts_
+
+```java
+  2:    pragma solidity ^0.8.11;
+```
+
+<br>
+<hr>
+
+## 12. Non-library/interface files should use fixed compiler versions, not floating ones
+
+```java
+  2:    pragma solidity ^0.8.11;
+```
 
 <br>
 <hr>
@@ -316,7 +350,7 @@ File: contracts/rubiconPools/BathPair.sol
 <br>
 <hr>
 
-## 7. Return values of approve() not checked
+## 7. Return values of `approve()` not checked
 
 _Not all `IERC20` implementations `revert()` when there's a failure in `approve()`. The function signature has a `boolean` return value and they indicate errors that way instead. By not checking the return value, operations that should have marked as failed, may potentially go through without actually approving anything_
 
@@ -442,6 +476,29 @@ Recommended Mitigation Steps:
 
 -   Consider adding zero-address checks:
     `require(newAddr != address(0));`
+
+<br>
+<hr>
+
+## 12. The Contract Should `approve(0)`/`safeApprove()` first - A second call to the function may revert
+
+_Some ERC20 tokens, such as Tether, `revert()` if `approve()` is called a second time without having called `approve(0)` first_
+
+_Some tokens (like USDT L199) do not work when changing the allowance from an existing non-zero allowance value.
+They must first be approved by zero and then the actual allowance must be approved._
+
+_When trying to re-approve an already approved token, all transactions revert and the protocol cannot be used._
+
+Recommended Mitigation Steps:
+
+-   Approve with a zero amount first before setting the actual amount. Consider use `safeIncreaseAllowance` and `safeDecreaseAllowance`.
+
+Example:
+
+```java
+IERC20(token).safeApprove(address(operator), 0);
+IERC20(token).safeApprove(address(operator), amount);
+```
 
 <br>
 <hr>
