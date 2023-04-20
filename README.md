@@ -399,6 +399,50 @@ File: contracts/rewards/RewardDistributor.sol
 99:           //console.log(block.timestamp,epoch,fee);
 ```
 
+## 11. Missing checks for `address(0x0)` (zero-address) when assigning values to `address` state variables
+
+_Missing checks for zero-addresses may lead to infunctional protocol, if the variable addresses are updated incorrectly._
+Example:
+
+`factory = _factory;`
+
+```java
+constructor(
+        address _factory,
+        INonfungiblePositionManager _nonfungiblePositionManager,
+        ISwapRouter _swapRouter,
+        ComptrollerInterface _comptroller
+    ) {
+        factory = _factory;
+        nonfungiblePositionManager = _nonfungiblePositionManager;
+        swapRouter = _swapRouter;
+        comptroller = _comptroller;
+        _notEntered = true;
+    }
+```
+
+<br>
+
+`pendingDistributor = _distributor;`
+
+```java
+/// @notice Sets the distributor contract
+    /// @param _distributor Address of the distributor
+    function setDistributor(address _distributor) external onlyOwner {
+        if (address(distributor) == address(0)) {
+            distributor = Distributor(_distributor);
+        } else {
+            pendingDistributor = _distributor;
+            distributorEnableDate = block.timestamp + 1 days;
+        }
+    }
+```
+
+Recommended Mitigation Steps:
+
+-   Consider adding zero-address checks:
+    `require(newAddr != address(0));`
+
 <br>
 <hr>
 <br>
