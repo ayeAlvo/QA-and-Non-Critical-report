@@ -225,6 +225,33 @@ _Some files use `>=`, some use `^`. The instances below are examples of the meth
 
 <br>
 <hr>
+
+## 13. Constants in comparisons should appear on the left side
+
+_Constants on the left are better, but this is often trumped by a preference for English word order_
+
+_Doing so will prevent [typo bugs](https://www.moserware.com/2008/01/constants-on-left-are-better-but-this.html)_
+
+Typically we all write comparison statements like this:
+
+```java
+if (currentValue == 5)
+{
+    // do work
+}
+```
+
+But, the following is just as valid:
+
+```java
+if (5 == currentValue)
+{
+    // do work
+}
+```
+
+<br>
+<hr>
 <br>
 
 # Low Risk
