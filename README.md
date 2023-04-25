@@ -170,9 +170,11 @@ _`ecrecover()` returns the zero address if the signature is invalid. If the sign
 <br>
 <hr>
 
-## 9. Consider addings checks for signature malleability
+## 9. Consider addings checks for signature malleability - Signatures vulnerable to malleability attacks.
 
 _Use OpenZeppelin's `ECDSA` contract rather than calling `ecrecover()` directly_
+
+_`ecrecover()` accepts as valid, two versions of signatures, meaning an attacker can use the same signature twice. Consider adding checks for signature malleability, or using OpenZeppelin’s `ECDSA` library to perform the extra checks necessary in order to prevent this attack._
 
 ```java
   address recoveredAddress = ecrecover(digest, v, r, s);
@@ -252,6 +254,112 @@ if (5 == currentValue)
 
 <br>
 <hr>
+
+## 14. According to the syntax rules, use `=> mapping (` instead of `=> mapping(` using spaces as keyword
+
+```java
+-  372: mapping ( address => mapping( uint256 => StakedS1Citizen )) public stakedS1;
++  372: mapping ( address => mapping ( uint256 => StakedS1Citizen )) public stakedS1;
+
+
+- 405: 	mapping ( address => mapping( uint256 => StakedS2Citizen )) public stakedS2;
++ 405: 	mapping ( address => mapping ( uint256 => StakedS2Citizen )) public stakedS2;
+
+```
+
+<br>
+<hr>
+
+## 15. Inconsistent Solidity Versions
+
+_Different Solidity compiler versions are used, the following contracts mix versions_
+
+```java
+2: pragma solidity ^0.8.19;
+10: pragma solidity ^0.8.0;
+10: pragma solidity 0.8.11;
+```
+
+Recommendation:
+
+Versions must be consistent with each other.
+
+<br>
+<hr>
+
+## 16. Shorthand way to write if / else statement
+
+_The normal `if` / `else` statement can be refactored in a shorthand way to write it:_
+
+1. Increases readability
+2. Shortens the overall SLOC
+
+```java
+142:  function changeCreateQuestRole(address account_, bool canCreateQuest_) public onlyOwner {
+143:        if (canCreateQuest_) {
+144:            _grantRole(CREATE_QUEST_ROLE, account_);
+145:        } else {
+146:            _revokeRole(CREATE_QUEST_ROLE, account_);
+147:        }
+148:    }
+```
+
+The above instance can be refactored in:
+
+```js
+function changeCreateQuestRole(address account_, bool canCreateQuest_) public onlyOwner {
+        canCreateQuest_ ? _grantRole(CREATE_QUEST_ROLE, account_); : _revokeRole(CREATE_QUEST_ROLE, account_);
+    }
+```
+
+<br>
+<hr>
+
+## 17. Adding a return statement when the function defines a named return variable, is redundant.
+
+```java
+function validateSignedSet(RRSetWithSignature memory input, bytes memory proof, uint256 now) internal view returns(RRUtils.SignedSet memory rrset)
+{...
+return rrset;
+    }
+```
+
+<br>
+<hr>
+
+## 18. Constant redefined elsewhere.
+
+_Consider defining in only one contract so that values cannot become out of sync when only one location is updated. A [cheap way](https://plaxion.medium.com/gas-cost-of-solidity-library-functions-dbe0cedd4678) to store constants in a single location is to create an `internal constant` in a `library`. If the variable is a local cache of another contract's value, consider making the cache variable internal or private, which will require external users to query the contract with the source of truth, so that callers don't get out of sync._
+
+```java
+File: src/Pages.sol
+
+/// @audit seen in src/ArtGobblers.sol
+86:       Goo public immutable goo;
+
+/// @audit seen in src/ArtGobblers.sol
+89:       address public immutable community;
+
+/// @audit seen in src/ArtGobblers.sol
+103:      uint256 public immutable mintStart;
+```
+
+```java
+File: src/utils/rand/ChainlinkV1RandProvider.sol
+
+/// @audit seen in src/utils/token/PagesERC721.sol
+20:       ArtGobblers public immutable artGobblers;
+```
+
+```java
+File: script/deploy/DeployRinkeby.s.sol
+
+/// @audit seen in src/Pages.sol
+11:       uint256 public immutable mintStart = 1656369768;
+```
+
+<br>
+<hr>
 <br>
 
 # Low Risk
@@ -304,6 +412,8 @@ receive() external payable {}
 _Use custom errors to save deployment and runtime costs in case of revert._
 
 _Instead of using strings for error messages (e.g., `require(msg.sender == owner, “unauthorized”)`), you can use custom errors to reduce both deployment and runtime gas costs. In addition, they are very convenient as you can easily pass dynamic information to them._
+
+_Starting from `Solidity v0.8.4`, there is a convenient and gas-efficient way to explain to users why an operation failed through the use of custom errors. Until now, you could already use strings to give more information about failures like this:_
 
 Before:
 
@@ -452,6 +562,8 @@ File: contracts/core/GolomTrader.sol
 341:      ) public nonReentrant {
 ```
 
+## 9.1 Missing NatSpec in file.
+
 <br>
 <hr>
 
@@ -534,6 +646,18 @@ Example:
 ```java
 IERC20(token).safeApprove(address(operator), 0);
 IERC20(token).safeApprove(address(operator), amount);
+```
+
+<br>
+<hr>
+
+## 13. Chainlink's VRF V1 is deprecated
+
+_VRF V1 is [deprecated](https://docs.chain.link/vrf/v1/introduction), so new projects should not use it._
+
+```java
+13   /// @notice RandProvider wrapper around Chainlink VRF v1.
+14:  contract ChainlinkV1RandProvider is RandProvider, VRFConsumerBase {
 ```
 
 <br>
