@@ -255,7 +255,7 @@ if (5 == currentValue)
 <br>
 <hr>
 
-## 14. According to the syntax rules, use `=> mapping (` instead of `=> mapping(` using spaces as keyword
+## 14. According to the syntax rules, use `=> mapping ( ` instead of `=> mapping(` using spaces as keyword
 
 ```java
 -  372: mapping ( address => mapping( uint256 => StakedS1Citizen )) public stakedS1;
@@ -357,6 +357,10 @@ File: script/deploy/DeployRinkeby.s.sol
 /// @audit seen in src/Pages.sol
 11:       uint256 public immutable mintStart = 1656369768;
 ```
+
+## 19. Don’t use `_msgSender()` if not supporting `EIP-2771`.
+
+_Use msg.sender if the code does not implement [EIP-2771 trusted forwarder](https://eips.ethereum.org/EIPS/eip-2771) support._
 
 <br>
 <hr>
