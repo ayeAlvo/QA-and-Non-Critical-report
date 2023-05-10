@@ -364,6 +364,92 @@ _Use msg.sender if the code does not implement [EIP-2771 trusted forwarder](http
 
 <br>
 <hr>
+
+## 20. The `nonReentrant` modifier should occur before all other modifiers.
+
+_This is a best-practice to protect against reentrancy in other modifiers._
+
+<br>
+<hr>
+
+## 21. Function ordering does not follow the Solidity style guide.
+
+_According to the S[olidity style guide](https://docs.soliditylang.org/en/v0.8.17/style-guide.html#order-of-functions), functions should be laid out in the following order: `constructor()`, `receive()`, `fallback()`, `external`, `public`, `internal`, `private`, but the cases below do not follow this pattern:_
+
+```java
+File: src/contracts/core/StrategyManager.sol
+
+/// @audit _setStrategyWhitelister() came earlier
+857:      function getDeposits(address depositor) external view returns (IStrategy[] memory, uint256[] memory) {
+```
+
+[Code example](https://github.com/code-423n4/2023-04-eigenlayer/blob/398cc428541b91948f717482ec973583c9e76232/src/contracts/core/StrategyManager.sol#L857)
+
+<br>
+<hr>
+
+## 22. Contract does not follow the Solidity style guide's suggested layout ordering.
+
+_The [style guide](https://docs.soliditylang.org/en/v0.8.16/style-guide.html#order-of-layout) says that, within a contract, the ordering should be 1) `Type declarations`, 2) `State variables`, 3) `Events`, 4) `Modifiers`, and 5) `Functions`, but the contract(s) below do not follow this ordering:_
+
+```java
+File: src/contracts/strategies/StrategyBase.sol
+
+/// @audit function _tokenBalance came earlier
+250:      uint256[48] private __gap;
+```
+
+[Code example](https://github.com/code-423n4/2023-04-eigenlayer/blob/398cc428541b91948f717482ec973583c9e76232/src/contracts/strategies/StrategyBase.sol#L250)
+
+<br>
+<hr>
+
+## 23. Avoid the use of sensitive terms.
+
+_Use [alternative variants](https://www.zdnet.com/article/mysql-drops-master-slave-and-blacklist-whitelist-terminology/), e.g. allowlist/denylist instead of whitelist/blacklist_
+
+```java
+File: src/contracts/core/StrategyManager.sol
+
+146:      function initialize(address initialOwner, address initialStrategyWhitelister, IPauserRegistry _pauserRegistry, uint256 initialPausedStatus, uint256 _withdrawalDelayBlocks)
+
+846:      function _setStrategyWhitelister(address newStrategyWhitelister) internal {
+
+592:      function addStrategiesToDepositWhitelist(IStrategy[] calldata strategiesToWhitelist) external onlyStrategyWhitelister {
+
+593:          uint256 strategiesToWhitelistLength = strategiesToWhitelist.length;
+
+607:      function removeStrategiesFromDepositWhitelist(IStrategy[] calldata strategiesToRemoveFromWhitelist) external onlyStrategyWhitelister {
+
+608:          uint256 strategiesToRemoveFromWhitelistLength = strategiesToRemoveFromWhitelist.length;
+
+587:      function setStrategyWhitelister(address newStrategyWhitelister) external onlyOwner {
+
+592:      function addStrategiesToDepositWhitelist(IStrategy[] calldata strategiesToWhitelist) external onlyStrategyWhitelister {
+
+607:      function removeStrategiesFromDepositWhitelist(IStrategy[] calldata strategiesToRemoveFromWhitelist) external onlyStrategyWhitelister {
+
+846:      function _setStrategyWhitelister(address newStrategyWhitelister) internal {
+
+84:       /// @notice Emitted when the `strategyWhitelister` is changed
+
+143:       * @param initialStrategyWhitelister The initial value of `strategyWhitelister` to set.
+
+586:      /// @notice Owner-only function to change the `strategyWhitelister` address.
+
+591:      /// @notice Owner-only function that adds the provided Strategies to the 'whitelist' of strategies that stakers can deposit into
+
+595:              // change storage and emit event only if strategy is not already in whitelist
+
+606:      /// @notice Owner-only function that removes the provided Strategies from the 'whitelist' of strategies that stakers can deposit into
+
+610:              // change storage and emit event only if strategy is already in whitelist
+
+845:      /// @notice Internal function for modifying the `strategyWhitelister`. Used inside of the `setStrategyWhitelister` and `initialize` functions.
+```
+
+<br>
+<hr>
 <br>
 
 # Low Risk
