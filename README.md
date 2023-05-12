@@ -448,6 +448,97 @@ File: src/contracts/core/StrategyManager.sol
 
 <br>
 <hr>
+
+## 24. Typos
+
+Example:
+
+```java
+/// @audit usefull
+60:           uint256 nonce; // nonce of order usefull for cancelling in bulk
+```
+
+<br>
+<hr>
+
+## 25. NatSpec is incomplete
+
+```java
+File: contracts/core/GolomTrader.sol
+
+/// @audit Missing: '@return'
+162       ///      OrderStatus = 3 , valid order
+163       /// @param o the Order struct to be validated
+164       function validateOrder(Order calldata o)
+165           public
+166           view
+167           returns (
+168               uint256,
+169               bytes32,
+170:              uint256
+
+/// @audit Missing: '@param tokenId'
+/// @audit Missing: '@param proof'
+328       /// @dev function to fill a signed order of ordertype 2 also has a payment param in case the taker wants
+329       ///      to send ether to that address on filling the order, Match an criteria order, ensuring that the supplied proof demonstrates inclusion of the tokenId in the associated merkle root, if root is 0 then any token can be used to fill the order
+330       /// @param o the Order struct to be filled must be orderType 2
+331       /// @param amount the amount of times the order is to be filled(useful for ERC1155)
+332       /// @param referrer referrer of the order
+333       /// @param p any extra payment that the taker of this order wanna send on succesful execution of order
+334       function fillCriteriaBid(
+335           Order calldata o,
+336           uint256 amount,
+337           uint256 tokenId,
+338           bytes32[] calldata proof,
+339           address referrer,
+340           Payment calldata p
+341:      ) public nonReentrant {
+```
+
+## 26.1 Missing NatSpec in file.
+
+<br>
+<hr>
+
+## 27. Inconsistent spacing in comments
+
+_Some lines use `// x` and some use `//x`. The instances below point out the usages that don’t follow the majority, within each file_
+
+Example:
+
+```java
+File: contracts/core/GolomTrader.sol
+181:          //deadline
+
+File: contracts/rewards/RewardDistributor.sol
+99:           //console.log(block.timestamp,epoch,fee);
+```
+
+<br>
+<hr>
+
+## 28. Consider disabling `renounceOwnership()`.
+
+_If the plan for your project does not include eventually giving up all ownership control, consider overwriting OpenZeppelin's `Ownable`'s `renounceOwnership()` function in order to disable it._
+
+[Example](https://github.com/code-423n4/2023-05-venus/blob/9853f6f4fe906b635e214b22de9f627c6a17ba5b/contracts/Comptroller.sol#L18-L18):
+
+```java
+File: contracts/Comptroller.sol
+
+18:      Ownable2StepUpgradeable,
+```
+
+[Example](https://github.com/code-423n4/2023-05-venus/blob/9853f6f4fe906b635e214b22de9f627c6a17ba5b/contracts/Pool/PoolRegistry.sol#L25-L25):
+
+```java
+File: contracts/Pool/PoolRegistry.sol
+
+25:  contract PoolRegistry is Ownable2StepUpgradeable, AccessControlledV8, PoolRegistryInterface {
+```
+
+<br>
+<hr>
 <br>
 
 based on real reports [Code4arena](https://code4rena.com/reports)
